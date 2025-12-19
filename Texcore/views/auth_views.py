@@ -5,6 +5,9 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login, logout as auth_logout
 from django.contrib import messages
 from ..services import auth_service
+from ..services.repositories import DjangoUserRepository
+from ..services.auth_strategies import PasswordStrategy
+from ..services.auth_service import AuthService
 
 
 def inicio(request):
@@ -22,7 +25,12 @@ def login(request):
     if request.method == 'POST':
         username = request.POST.get('username')
         password = request.POST.get('password')
-        user = auth_service.authenticate_user(request, username, password)
+        # Use the new AuthService (DIP + Strategy). Keep compatibility fallback
+        # via `auth_service.authenticate_user` is still available project-wide.
+        repo = DjangoUserRepository()
+        strategy = PasswordStrategy()
+        service = AuthService(repo, strategy)
+        user = service.authenticate(request, {'username': username, 'password': password})
         
         if user is not None:
             auth_login(request, user)

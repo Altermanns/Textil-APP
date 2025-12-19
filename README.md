@@ -3,6 +3,7 @@
 Pequeños refactors para mejorar legibilidad y organización siguiendo principios de Clean Code.
 
 Qué cambié:
+
 - Separé lógica de autenticación y consultas en `services.py`.
 - Simplifiqué y renombré vistas para mayor claridad.
 - Unifiqué el formulario en un `ModelForm` con validación.
@@ -32,8 +33,10 @@ python manage.py test
 ```
 
 Notas:
+
 - Mantengo los nombres de rutas (name=...) que usan las plantillas para facilitar la integración.
 - Próximos pasos recomendados: limpiar plantillas, añadir más tests y configurar linter.
+
 # LoginCRUD — Sistema básico de CRUD de Materia Prima
 
 Proyecto Django que implementa un sistema pequeño para gestionar "Materia Prima" con autenticación y páginas protegidas.
@@ -41,21 +44,24 @@ Proyecto Django que implementa un sistema pequeño para gestionar "Materia Prima
 Este README cubre cómo preparar el entorno, ejecutar la app en desarrollo, crear usuarios de prueba, y detalles importantes antes de subir a Git.
 
 ## Resumen
+
 - Framework: Django 5.2.x
 - Python: 3.11+
 - Base de datos: SQLite (por defecto, `db.sqlite3` en el repo)
 - App principal: `Texcore`
 
 ## Estructura principal
+
 - `LoginCRUD/` — carpeta del proyecto (configuración de Django)
 - `Texcore/` — aplicación que contiene modelos, vistas, templates y estática
-	- `templates/paginas/` — plantillas base, login, dashboard
-	- `templates/libros/` — vistas CRUD para Materia Prima (index, crear, editar)
-	- `static/css/` — estilos (`site.css`, `login.css`)
+  - `templates/paginas/` — plantillas base, login, dashboard
+  - `templates/libros/` — vistas CRUD para Materia Prima (index, crear, editar)
+  - `static/css/` — estilos (`site.css`, `login.css`)
 - `manage.py` — comandos de Django
 - `db.sqlite3` — base de datos de desarrollo (incluida en repo actualmente)
 
 ## Requisitos
+
 - Python 3.11+
 - pip
 
@@ -70,6 +76,7 @@ pip install -r requirements.txt  # (si agregas uno)
 > Nota: Este repo no incluye `requirements.txt` por defecto. Puedes generar uno con `pip freeze > requirements.txt` en tu entorno.
 
 ## Migraciones
+
 Si abres el proyecto en una máquina nueva, aplica migraciones:
 
 ```powershell
@@ -78,50 +85,92 @@ py -3 manage.py migrate
 ```
 
 ## Crear usuarios
+
 - Crear superusuario (admin):
+
 ```powershell
 py -3 manage.py createsuperuser
 ```
+
 - Crear usuario de prueba (no superuser):
+
 ```powershell
 py -3 manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_user('testuser','test@example.com','Testpass123!')"
 ```
 
 En este repositorio de ejemplo ya creé un usuario de prueba:
+
 - Usuario: `testuser`
 - Contraseña: `Testpass123!`
 
 ## Ejecutar servidor en desarrollo
+
 ```powershell
 py -3 manage.py runserver
 ```
+
 Visitar: `http://127.0.0.1:8000/`
 
 ## Flujo de la app
+
 1. Inicio (`/`) — página pública con botón "Iniciar Sesion".
 2. Login (`/login/`) — autenticación; redirige al dashboard en `/libros/`.
 3. Dashboard (`/libros/`) — botones a CRUD de Materia Prima.
 4. CRUD (`/materias/`, `/materias/crear/`, `/materias/editar/<id>/`) — vistas protegidas con login.
 
 ## Seguridad y buenas prácticas
+
 - Las vistas protegidas usan `@login_required` y `LOGIN_URL`/`LOGIN_REDIRECT_URL` están configurados.
 - La eliminación de registros ahora se hace vía POST con CSRF (se usa un formulario pequeño en la plantilla).
 - No subas `db.sqlite3` ni secretos al repositorio público. Añade `db.sqlite3` a `.gitignore` si vas a publicar el repo.
 - En producción: desactivar `DEBUG`, configurar `ALLOWED_HOSTS`, usar una base de datos adecuada y configurar `SECRET_KEY` vía variables de entorno.
 
 ## Tests rápidos (manual)
+
 - Verificar que las URLs protegidas redirigen cuando no estás autenticado:
+
 ```powershell
 py -3 manage.py shell -c "from django.test import Client; c=Client(); print(c.get('/libros/').status_code)"
 ```
 
 ## Posibles mejoras (sugerencias)
+
 - Refactor a Class-Based Views para el CRUD (`ListView`, `CreateView`, `UpdateView`, `DeleteView`).
 - Añadir un `services.py` para separar lógica de negocio y mantener vistas delgadas.
 - Añadir pruebas unitarias (pytest/django) para asegurar flujo de autenticación y CRUD.
 - Añadir `requirements.txt` y un `Makefile` o scripts PowerShell para facilitar comandos comunes.
 
+## Arquitectura: Principios SOLID y Patrones aplicados
+
+He aplicado las siguientes mejoras arquitectónicas para favorecer mantenibilidad y testabilidad:
+
+- **Dependency Inversion Principle (DIP):** las capas de servicio ya no dependen directamente de modelos Django; en `Texcore/services/repositories.py` se definen interfaces (`UserRepository`) y una implementación concreta `DjangoUserRepository`. Los servicios pueden recibir repositorios por inyección.
+- **Interface Segregation Principle (ISP):** las abstracciones son pequeñas y específicas (por ejemplo `UserRepository` con métodos de consulta concretos) evitando interfaces gordas que obliguen a implementar métodos innecesarios.
+
+- **Repository Pattern:** se creó `Texcore/services/repositories.py` para encapsular el acceso a datos y facilitar mocks en tests.
+- **Strategy Pattern:** la autenticación utiliza `Texcore/services/auth_strategies.py` con `AuthStrategy` y `PasswordStrategy` (y un `TokenStrategy` stub) que permiten intercambiar mecanismos de autenticación sin cambiar la lógica del servicio.
+
+Archivos clave:
+
+- `Texcore/services/repositories.py` — interfaces y `DjangoUserRepository`.
+- `Texcore/services/auth_strategies.py` — estrategias de autenticación (`PasswordStrategy`).
+- `Texcore/services/auth_service.py` — `AuthService` que depende de las abstracciones y un wrapper compatible `authenticate_user` para llamadas existentes.
+- `Texcore/views/auth_views.py` — ejemplo de construcción de `AuthService` con `DjangoUserRepository` y `PasswordStrategy`.
+
+Cómo probar localmente:
+
+1. Ejecuta el servidor como antes:
+
+```powershell
+py -3 manage.py runserver
+```
+
+2. El flujo de login no cambia; las vistas siguen funcionando. Para usar DI en tests, instancia `AuthService` con un mock de `UserRepository` o con distintas `AuthStrategy`.
+
+Si quieres, puedo añadir tests de ejemplo que mockeen `UserRepository` y verifiquen la lógica de `AuthService`.
+
 ## Licencia
+
 MIT License
 
 Copyright (c) 2025 Isaac Trujillo & Brandon Arrellano
@@ -143,5 +192,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-
