@@ -1,0 +1,149 @@
+/* Commercial global site styles */
+html {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Use viewport height */
+  background: linear-gradient(180deg, #fbfdff 0%, #f1f5f9 100%);
+  font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, "Helvetica Neue";
+  color: #0f172a;
+}
+
+main {
+  flex: 1 0 auto; /* Allow main content to grow and shrink */
+  margin-bottom: 3rem; /* Add breathing room above the footer */
+}
+
+.site-footer {
+  flex-shrink: 0; /* Prevent footer from shrinking */
+  height: var(--footer-height);
+  z-index: 1030;
+  display: flex;
+  align-items: center;
+  background: #fff;
+}
+
+
+.navbar{
+  background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85));
+  border-bottom: 1px solid rgba(15,23,42,0.04);
+  box-shadow: 0 6px 30px rgba(2,6,23,0.06);
+}
+
+.navbar .nav-link{ color: var(--muted); font-weight:600; margin-right:0.6rem }
+.navbar .nav-link:hover{ color: var(--brand) }
+
+.navbar-brand .brand-text{ font-weight:800; margin-left:6px; color:#0b1220 }
+
+/* subtle hover on table rows */
+table.table tbody tr:hover{ background: rgba(37,99,235,0.04) }
+
+/* better button sizes */
+.btn-sm{ padding:0.35rem 0.6rem }
+
+/* icons inside buttons spacing and subtle hover */
+.btn svg{ vertical-align:middle; margin-right:6px }
+.btn { transition: transform 120ms ease, box-shadow 120ms ease; }
+.btn:active{ transform: translateY(1px) }
+
+/* subtle lift on cards */
+.card:hover{ transform: translateY(-4px); transition: transform 180ms ease, box-shadow 180ms ease }
+.card{ will-change: transform }
+
+/* focus styles for accessibility */
+.btn:focus, .form-control:focus{ outline: 3px solid rgba(37,99,235,0.12); outline-offset: 2px }
+
+.hero{
+  padding: 3.2rem 0; text-align:center; margin-bottom:1.5rem
+}
+.hero h1{ font-size:2.25rem; font-weight:700; margin-bottom:0.5rem }
+.hero p{ color:var(--muted); margin-bottom:1rem }
+
+.container{ margin-top:1.5rem }
+
+.card{ background:var(--card-bg); border-radius:12px; box-shadow: 0 12px 40px rgba(2,6,23,0.06); border: none }
+
+.form-card{ max-width:720px; margin:0 auto }
+
+.form-control{ border-radius:8px; padding:0.9rem 0.8rem; line-height: 1.5; }
+.form-label{ font-weight:600; color:#0f172a }
+
+.btn-primary{ background:var(--brand); border-color:var(--brand); padding:0.6rem 1.1rem; border-radius:8px }
+.btn-primary:hover{ background:var(--brand-600); border-color:var(--brand-600) }
+
+table.table{ background:transparent }
+table.table thead th{ border-bottom:0; color:#0b1220; font-weight:700; background:transparent }
+table.table tbody td{ vertical-align:middle }
+
+.empty-placeholder{ padding:3rem 1rem; background:linear-gradient(180deg,#ffffff,#fbfdff); border-radius:10px; text-align:center }
+
+/* small responsive tweaks */
+@media (max-width: 576px){
+  .container{ padding:0 0.75rem }
+  .hero h1{ font-size:1.6rem }
+}
+
+/* responsive tweaks */
+@media (max-width: 768px){
+  /* stack action buttons */
+  .btn + .btn{ margin-left:0; margin-top:0.5rem }
+  .form-card { padding: 1rem }
+  main .container { padding: 0 0.5rem }
+}
+
+@media (max-width: 480px){
+  /* tables scroll horizontally on small screens */
+  .table-responsive { overflow-x: auto }
+  /* forms full width */
+  .form-card .form-group{ width:100% }
+  /* disable hover lift on touch devices for better performance */
+  .card:hover{ transform:none }
+}
+
+
+
+@media (max-width: 576px){
+  :root{ --footer-height: 88px }
+}
+
+@media print{
+  .site-footer{ position: static }
+  body{ padding-bottom: 0 }
+}
+
+/* make form rows into a responsive two-column grid on md+ */
+.form-card .form-row{
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-gap: 1rem 1.25rem;
+}
+
+/* form groups that should span full width (col-12) */
+.form-card .form-group.col-12{ grid-column: 1 / -1 }
+
+@media (max-width: 767px){
+  .form-card .form-row{ grid-template-columns: 1fr }
+}
+
+/* Fix dropdown menu z-index issue */
+.dropdown-menu {
+  z-index: 1040; /* Ensure it's above the sticky footer (1030) */
+}
+
+/* Fix for select dropdown text clipping */
+select.form-control {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+}
+
+/* Styles moved from lista.html for global consistency */
+.badge {
+    font-size: 0.8rem;
+}
+.fas {
+    width: 16px;
+    text-align: center;
+}
