@@ -17,9 +17,13 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import include
+from Texcore.services.auth_views import ObtainCSRFToken, LoginView, LogoutView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('Texcore.urls')),
     path('api-auth/', include('rest_framework.urls')),
+    path("api/auth/csrf/", ObtainCSRFToken.as_view(), name="api-csrf"),
+    path("api/auth/login/", LoginView.as_view(), name="api-login"),
+    path("api/auth/logout/", LogoutView.as_view(), name="api-logout"),
 ]
