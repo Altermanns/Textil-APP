@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async () => {
     try {
-      const { data } = await api.get('/api/auth/user/');
+      const { data } = await api.get('/auth/user/');
       setUser(data);
       setIsAuthenticated(true);
     } catch (error) {
@@ -56,10 +56,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // and needs to be included in subsequent POST requests.
       // Axios with `withCredentials` will handle the cookie, but we still need the token.
       // Let's assume the backend csrf view sets a cookie correctly.
-      // We can make a GET request to /api/auth/csrf/ to ensure the cookie is set.
-      await api.get('/api/auth/csrf/'); // This will ensure CSRF cookie is set
+      // We can make a GET request to /auth/csrf/ to ensure the cookie is set.
+      await api.get('/auth/csrf/'); // This will ensure CSRF cookie is set
 
-      const response = await api.post('/api/auth/login/', {
+      const response = await api.post('/auth/login/', {
         username: username_param,
         password: password_param,
       });
@@ -78,7 +78,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setIsLoading(true);
     try {
-      await api.post('/api/auth/logout/');
+      await api.post('/auth/logout/');
       setUser(null);
       setIsAuthenticated(false);
     } catch (error) {
