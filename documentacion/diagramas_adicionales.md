@@ -72,34 +72,31 @@ classDiagram
 Este diagrama ilustra las interacciones entre los diferentes tipos de usuarios (actores) y el sistema. Muestra las funcionalidades clave que cada rol puede realizar.
 
 ```mermaid
-graph TD
-    subgraph "Actores"
-        UA["Usuario no autenticado"]
-        UU(Usuario Autenticado)
-        A(Administrativo)
-        P(Preparador)
-        O(Operario)
-    end
-
-    subgraph "Sistema"
-        UC1("Iniciar Sesión")
-        UC2("Cerrar Sesión")
-        UC3("Ver Dashboard Personal")
-        UC4("Gestionar CRUD de Materias Primas")
-        UC5("Gestionar Procesos de Preparación")
-        UC6("Gestionar Procesos de Hilatura")
-        UC7("Ver Reportes Globales")
-        UC8("Gestionar Usuarios y Roles")
-    end
-
-    UA --> UC1
-    UU --> UC2
-    UU --> UC3
+usecase "Casos de Uso del Sistema"
+    actor "Usuario no autenticado" as UA
+    actor "Usuario Autenticado" as UU
+    actor "Administrativo" as A
+    actor "Preparador" as P
+    actor "Operario" as O
 
     A --|> UU
     P --|> UU
     O --|> UU
 
+    rectangle "Sistema" {
+        usecase "Iniciar Sesión" as UC1
+        usecase "Cerrar Sesión" as UC2
+        usecase "Ver Dashboard Personal" as UC3
+        usecase "Gestionar CRUD de Materias Primas" as UC4
+        usecase "Gestionar Procesos de Preparación" as UC5
+        usecase "Gestionar Procesos de Hilatura" as UC6
+        usecase "Ver Reportes Globales" as UC7
+        usecase "Gestionar Usuarios y Roles" as UC8
+    }
+
+    UA --> UC1
+    UU --> UC2
+    UU --> UC3
     O --> UC4
     P --> UC5
     O --> UC6
