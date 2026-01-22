@@ -75,7 +75,6 @@ Este diagrama ilustra las interacciones entre los diferentes tipos de usuarios (
 graph TD
     subgraph "Actores"
         UA["Usuario no autenticado"]
-        UU(Usuario Autenticado)
         A(Administrativo)
         P(Preparador)
         O(Operario)
@@ -92,15 +91,18 @@ graph TD
         UC8[Gestionar Usuarios y Roles]
     end
 
-    %% Relaciones de Herencia
-    A --|> UU
-    P --|> UU
-    O --|> UU
-
     %% Relaciones de Casos de Uso
     UA --> UC1
-    UU --> UC2
-    UU --> UC3
+
+    %% Casos de uso comunes para roles autenticados
+    A --> UC2
+    P --> UC2
+    O --> UC2
+    A --> UC3
+    P --> UC3
+    O --> UC3
+
+    %% Casos de uso específicos por rol
     O --> UC4
     P --> UC5
     O --> UC6

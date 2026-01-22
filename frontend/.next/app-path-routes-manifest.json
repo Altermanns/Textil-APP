@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/dashboard/page": "/dashboard",
+  "/favicon.ico/route": "/favicon.ico",
+  "/hilaturas/[id]/edit/page": "/hilaturas/[id]/edit",
+  "/hilaturas/[id]/page": "/hilaturas/[id]",
+  "/hilaturas/create/page": "/hilaturas/create",
+  "/hilaturas/page": "/hilaturas",
+  "/login/page": "/login",
+  "/materias/[id]/edit/page": "/materias/[id]/edit",
+  "/materias/create/page": "/materias/create",
+  "/materias/page": "/materias",
+  "/page": "/",
+  "/preparaciones/[id]/edit/page": "/preparaciones/[id]/edit",
+  "/preparaciones/[id]/page": "/preparaciones/[id]",
+  "/preparaciones/create/page": "/preparaciones/create",
+  "/preparaciones/page": "/preparaciones",
+  "/users/[id]/edit/page": "/users/[id]/edit",
+  "/users/create/page": "/users/create",
+  "/users/page": "/users"
+}

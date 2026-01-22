@@ -1,0 +1,22 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/hilaturas/[id]/edit/page": "app/hilaturas/[id]/edit/page.js",
+  "/hilaturas/[id]/page": "app/hilaturas/[id]/page.js",
+  "/hilaturas/create/page": "app/hilaturas/create/page.js",
+  "/hilaturas/page": "app/hilaturas/page.js",
+  "/login/page": "app/login/page.js",
+  "/materias/[id]/edit/page": "app/materias/[id]/edit/page.js",
+  "/materias/create/page": "app/materias/create/page.js",
+  "/materias/page": "app/materias/page.js",
+  "/page": "app/page.js",
+  "/preparaciones/[id]/edit/page": "app/preparaciones/[id]/edit/page.js",
+  "/preparaciones/[id]/page": "app/preparaciones/[id]/page.js",
+  "/preparaciones/create/page": "app/preparaciones/create/page.js",
+  "/preparaciones/page": "app/preparaciones/page.js",
+  "/users/[id]/edit/page": "app/users/[id]/edit/page.js",
+  "/users/create/page": "app/users/create/page.js",
+  "/users/page": "app/users/page.js"
+}
