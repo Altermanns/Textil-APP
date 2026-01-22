@@ -6,6 +6,7 @@ from .views import (
     user_views,
     preparacion_views,
     hilatura_views,
+    auth_api,
 )
 
 urlpatterns = [
@@ -50,4 +51,10 @@ urlpatterns = [
     path('hilaturas/<int:hilatura_id>/eliminar/', hilatura_views.eliminar_hilatura, name='eliminar_hilatura'),
     path('hilaturas/<int:hilatura_id>/detalle/', hilatura_views.agregar_detalle_hilatura, name='agregar_detalle_hilatura'),
     path('hilaturas/reporte/', hilatura_views.reporte_hilaturas, name='reporte_hilaturas'),
+
+    # Minimal JSON auth API for Next.js frontend session authentication
+    path('auth/csrf/', auth_api.csrf_view, name='auth_csrf'),
+    path('auth/user/', auth_api.user_view, name='auth_user'),
+    path('auth/login/', auth_api.login_view, name='auth_login'),
+    path('auth/logout/', auth_api.logout_view, name='auth_logout'),
 ]
