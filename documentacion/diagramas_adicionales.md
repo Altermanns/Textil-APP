@@ -72,28 +72,32 @@ classDiagram
 Este diagrama ilustra las interacciones entre los diferentes tipos de usuarios (actores) y el sistema. Muestra las funcionalidades clave que cada rol puede realizar.
 
 ```mermaid
-usecase "Casos de Uso del Sistema"
-    actor "Usuario no autenticado" as UA
-    actor "Usuario Autenticado" as UU
-    actor "Administrativo" as A
-    actor "Preparador" as P
-    actor "Operario" as O
+graph TD
+    subgraph "Actores"
+        UA["Usuario no autenticado"]
+        UU(Usuario Autenticado)
+        A(Administrativo)
+        P(Preparador)
+        O(Operario)
+    end
 
+    subgraph "Sistema"
+        UC1[Iniciar Sesión]
+        UC2[Cerrar Sesión]
+        UC3[Ver Dashboard Personal]
+        UC4[Gestionar CRUD de Materias Primas]
+        UC5[Gestionar Procesos de Preparación]
+        UC6[Gestionar Procesos de Hilatura]
+        UC7[Ver Reportes Globales]
+        UC8[Gestionar Usuarios y Roles]
+    end
+
+    %% Relaciones de Herencia
     A --|> UU
     P --|> UU
     O --|> UU
 
-    rectangle "Sistema" {
-        usecase "Iniciar Sesión" as UC1
-        usecase "Cerrar Sesión" as UC2
-        usecase "Ver Dashboard Personal" as UC3
-        usecase "Gestionar CRUD de Materias Primas" as UC4
-        usecase "Gestionar Procesos de Preparación" as UC5
-        usecase "Gestionar Procesos de Hilatura" as UC6
-        usecase "Ver Reportes Globales" as UC7
-        usecase "Gestionar Usuarios y Roles" as UC8
-    }
-
+    %% Relaciones de Casos de Uso
     UA --> UC1
     UU --> UC2
     UU --> UC3
@@ -126,4 +130,45 @@ graph TD
     RedirectAdmin --> EndAdmin((Fin))
     RedirectPrep --> EndPrep((Fin))
     RedirectOp --> EndOp((Fin))
+```
+---
+
+## 4. Diagrama de Carriles (Swimlane) - Proceso de Preparación
+
+Este diagrama de carriles muestra cómo el proceso de preparación de materia prima fluye a través de diferentes roles (Operario, Preparador, Administrativo) y el sistema.
+
+```mermaid
+graph TD
+    subgraph Operario
+        A1[Registra nueva materia prima]
+    end
+    subgraph Sistema
+        B1[Crea registro de Materia Prima]
+        B2[Estado de preparación: 'Pendiente']
+        B3[Actualiza estado a 'En Proceso']
+        B4[Registra detalles del proceso]
+        B5[Actualiza estado a 'Completada']
+    end
+    subgraph Preparador
+        C1[Selecciona materia para preparar]
+        C2[Inicia el proceso de preparación]
+        C3[Añade detalles: temperatura, humedad, etc.]
+        C4[Finaliza y marca como 'Completada']
+    end
+    subgraph Administrativo
+        D1[Supervisa dashboards]
+        D2[Verifica estado de los procesos]
+    end
+
+    A1 --> B1
+    B1 --> C1
+    C1 --> B2
+    B2 --> C2
+    C2 --> B3
+    B3 --> C3
+    C3 --> B4
+    B4 --> C4
+    C4 --> B5
+    B5 --> D1
+    D1 --> D2
 ```
