@@ -1,9 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import withAuth from '../../../../components/auth/withAuth';
-import api from '../../../../services/api';
-import Link from 'next/link';
+import React, { useEffect, useState } from 'react';
+import { useAuth } from '../../../context/AuthContext';
+import api from '../../../services/api';
 import { useRouter, useParams } from 'next/navigation';
 
 interface Materia {
@@ -12,181 +11,138 @@ interface Materia {
   cantidad: number;
   unidad_medida: string;
   lote: string;
-  fecha_ingreso: string; // Assuming ISO date string
-  usuario_registro: string; // Username of the registering user
+  fecha_ingreso: string;
 }
 
 const EditMateriaPage = () => {
-  const [materia, setMateria] = useState<Materia | null>(null);
-  const [tipo, setTipo] = useState('');
-  const [cantidad, setCantidad] = useState<number>(0);
-  const [unidadMedida, setUnidadMedida] = useState('');
-  const [lote, setLote] = useState('');
-  const [fechaIngreso, setFechaIngreso] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const { isAuthenticated } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const materiaId = params.id as string;
+  const materiaId = params.id; // Get id from URL
+
+  const [formData, setFormData] = useState<Materia>({
+    id: 0,
+    tipo: '',
+    cantidad: 0,
+    unidad_medida: '',
+    lote: '',
+    fecha_ingreso: '',
+  });
 
   useEffect(() => {
-    const fetchMateria = async () => {
-      try {
-        const response = await api.get(`/api/materias/${materiaId}/`);
-        const materiaData: Materia = response.data;
-        setMateria(materiaData);
-        setTipo(materiaData.tipo);
-        setCantidad(materiaData.cantidad);
-        setUnidadMedida(materiaData.unidad_medida);
-        setLote(materiaData.lote);
-        setFechaIngreso(materiaData.fecha_ingreso);
-      } catch (err: any) {
-        setError('Error al cargar datos de la materia prima.');
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
     if (materiaId) {
-      fetchMateria();
+      api.get(`/materias/${materiaId}/`)
+        .then(response => {
+          setFormData(response.data);
+        })
+        .catch(error => {
+          console.error("Failed to fetch materia for editing", error);
+        });
     }
-  }, [materiaId]);
+  }, [isAuthenticated, router, materiaId]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-
-    try {
-      await api.put(`/api/materias/${materiaId}/`, {
-        tipo,
-        cantidad,
-        unidad_medida: unidadMedida,
-        lote,
-        fecha_ingreso: fechaIngreso,
-      });
-      alert('Materia prima actualizada exitosamente!');
-      router.push('/materias'); // Redirect to materias list
-    } catch (err: any) {
-      setError('Error al actualizar materia prima. Verifique los datos.');
-      console.error(err);
-    } finally {
-      setSubmitting(false);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  if (loading) {
-    return <div>Cargando materia prima...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-500">{error}</div>;
-  }
-
-  if (!materia) {
-    return <div>Materia prima no encontrada.</div>;
-  }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!isAuthenticated) {
+      router.push('/login');
+      return;
+    }
+    api.put(`/materias/${materiaId}/`, formData)
+      .then(() => {
+        router.push('/materias');
+      })
+      .catch(error => {
+        console.error("Failed to update materia", error);
+        // You might want to show an error message to the user
+      });
+  };
 
   return (
-    <div>
-      <h1 className="text-3xl font-bold mb-6">Editar Materia Prima: {materia.tipo}</h1>
-
-      {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4" role="alert">
-          <span className="block sm:inline">{error}</span>
-        </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="bg-white shadow-md rounded-lg p-6">
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Editar Materia Prima</h1>
+      <form onSubmit={handleSubmit} className="bg-white p-6 rounded-lg shadow-md">
         <div className="mb-4">
-          <label htmlFor="tipo" className="block text-gray-700 text-sm font-bold mb-2">
-            Tipo:
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="tipo">Tipo</label>
           <input
             type="text"
+            name="tipo"
             id="tipo"
+            value={formData.tipo}
+            onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={tipo}
-            onChange={(e) => setTipo(e.target.value)}
-            required
-            disabled={submitting}
           />
         </div>
-
         <div className="mb-4">
-          <label htmlFor="cantidad" className="block text-gray-700 text-sm font-bold mb-2">
-            Cantidad:
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="cantidad">Cantidad</label>
           <input
             type="number"
+            name="cantidad"
             id="cantidad"
+            value={formData.cantidad}
+            onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={cantidad}
-            onChange={(e) => setCantidad(Number(e.target.value))}
-            required
-            disabled={submitting}
           />
         </div>
-
         <div className="mb-4">
-          <label htmlFor="unidadMedida" className="block text-gray-700 text-sm font-bold mb-2">
-            Unidad de Medida:
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="unidad_medida">Unidad de Medida</label>
           <input
             type="text"
-            id="unidadMedida"
+            name="unidad_medida"
+            id="unidad_medida"
+            value={formData.unidad_medida}
+            onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={unidadMedida}
-            onChange={(e) => setUnidadMedida(e.target.value)}
-            disabled={submitting}
           />
         </div>
-
         <div className="mb-4">
-          <label htmlFor="lote" className="block text-gray-700 text-sm font-bold mb-2">
-            Lote:
-          </label>
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="lote">Lote</label>
           <input
             type="text"
+            name="lote"
             id="lote"
+            value={formData.lote}
+            onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={lote}
-            onChange={(e) => setLote(e.target.value)}
-            disabled={submitting}
           />
         </div>
-
-        <div className="mb-6">
-          <label htmlFor="fechaIngreso" className="block text-gray-700 text-sm font-bold mb-2">
-            Fecha de Ingreso:
-          </label>
+        <div className="mb-4">
+          <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="fecha_ingreso">Fecha de Ingreso</label>
           <input
             type="date"
-            id="fechaIngreso"
+            name="fecha_ingreso"
+            id="fecha_ingreso"
+            value={formData.fecha_ingreso}
+            onChange={handleChange}
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-            value={fechaIngreso}
-            onChange={(e) => setFechaIngreso(e.target.value)}
-            required
-            disabled={submitting}
           />
         </div>
-
         <div className="flex items-center justify-between">
           <button
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            disabled={submitting}
           >
-            {submitting ? 'Actualizando...' : 'Actualizar Materia Prima'}
+            Guardar Cambios
           </button>
-          <Link href="/materias" className="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          >
             Cancelar
-          </Link>
+          </button>
         </div>
       </form>
     </div>
   );
 };
 
-export default withAuth(EditMateriaPage);
+export default EditMateriaPage;

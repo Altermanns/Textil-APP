@@ -64,8 +64,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password: password_param,
       });
       
-      // If login is successful, refetch user data
+      // If login is successful, refetch user data and redirect to Django dashboard
       await fetchUser(); // This will update user and isAuthenticated state
+
+      const role = response.data.role;
+      let redirectUrl = 'http://127.0.0.1:8000/'; // Default to Django's root
+
+      switch (role) {
+        case 'admin':
+          redirectUrl = 'http://127.0.0.1:8000/dashboard/admin/';
+          break;
+        case 'preparador':
+          redirectUrl = 'http://127.0.0.1:8000/dashboard/preparador/';
+          break;
+        case 'operario':
+          redirectUrl = 'http://127.0.0.1:8000/dashboard/operario/';
+          break;
+        default:
+          redirectUrl = 'http://127.0.0.1:8000/'; // Fallback
+      }
+      window.location.href = redirectUrl; // Redirect the entire browser to Django
+      
       return response.data; // Optionally return login response data
     } catch (error) {
       setIsAuthenticated(false);
