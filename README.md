@@ -1,194 +1,92 @@
-# Login-CRUD (Texcore)
+# Textil-APP (Texcore)
 
-Pequeños refactors para mejorar legibilidad y organización siguiendo principios de Clean Code.
+Sistema de gestión para procesos de producción textil, incluyendo el control de materia prima, preparación y procesos de hilatura. 
 
-Qué cambié:
+El sistema utiliza una arquitectura basada en **Clean Architecture** (Principios SOLID, Patrón Repositorio y Estrategia) y centraliza la autenticación exclusivamente a través de **Keycloak**.
 
-- Separé lógica de autenticación y consultas en `services.py`.
-- Simplifiqué y renombré vistas para mayor claridad.
-- Unifiqué el formulario en un `ModelForm` con validación.
-- Registré el modelo `Materia` en el admin.
+## Características Principales
 
-Cómo ejecutar (entorno Django típico):
+- **Gestión de Materia Prima:** Registro y control de inventario inicial.
+- **Preparación y Hilatura:** Seguimiento del ciclo de vida de los materiales y control de calidad.
+- **Autenticación Centralizada:** Login exclusivo a través de **Keycloak (OIDC)**.
+- **Control de Acceso Basado en Roles (RBAC):** Redirecciones y permisos automáticos según el rol asignado en Keycloak (`admin`, `preparador`, `operario`).
 
-1. Crear y activar virtualenv, instalar dependencias (requirements no incluido):
+## Requisitos Previos
+
+- **Python:** 3.11 o superior.
+- **Keycloak:** Una instancia de Keycloak corriendo (puede ser en Docker).
+
+## Configuración del Entorno Local
+
+### 1. Clonar y preparar el entorno
 
 ```powershell
-# Windows PowerShell
-python -m venv .venv; .\.venv\Scripts\Activate.ps1
+# Clonar el repositorio
+git clone <url-del-repositorio>
+cd Textil-APP
+
+# Crear y activar un entorno virtual
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1   # Windows PowerShell
+# source .venv/bin/activate    # Linux/Mac
+
+# Instalar dependencias
 pip install -r requirements.txt
 ```
 
-2. Migraciones y correr servidor:
+### 2. Configurar Variables de Entorno
+
+Copia el archivo de ejemplo para crear tu configuración local:
+
+```powershell
+cp .env.example .env
+```
+
+Edita el archivo `.env` y asegúrate de configurar los parámetros de Keycloak:
+
+```env
+DEBUG=True
+SECRET_KEY=tu_clave_secreta_django
+DJANGO_SETTINGS_MODULE=LoginCRUD.settings.development
+
+# Configuración de Keycloak
+KEYCLOAK_URL=http://localhost:8080
+KC_REALM=textil-realm
+KC_CLIENT_ID=textil-app-a
+KC_CLIENT_SECRET=tu-client-secret-obtenido-de-keycloak
+```
+
+### 3. Configuración en Keycloak
+
+Para que la aplicación funcione, tu servidor de Keycloak debe tener la siguiente configuración:
+
+1. **Realm:** `textil-realm` (o el nombre que hayas definido en `.env`).
+2. **Client:** Crear un cliente llamado `textil-app-a`.
+   - **Access Type:** `confidential`.
+   - **Valid Redirect URIs:** `http://localhost:8000/keycloak/callback/`
+   - **Post Logout Redirect URIs:** `http://localhost:8000/`
+3. **Scopes:** En "Client Scopes", asegúrate de que `openid`, `profile` y `email` estén asignados como **Default**.
+4. **Roles:** Crea los roles en el cliente: `admin`, `preparador` y `operario`.
+5. **Usuarios:** Crea usuarios y asígnales los roles correspondientes a través de "Role Mappings".
+
+### 4. Base de Datos y Ejecución
+
+Aplica las migraciones e inicia el servidor de desarrollo:
 
 ```powershell
 python manage.py migrate
 python manage.py runserver
 ```
 
-3. Ejecutar tests:
+Visita `http://localhost:8000/` y utiliza el botón de "Iniciar sesión con Keycloak".
 
-```powershell
-python manage.py test
-```
+## Arquitectura y Patrones
 
-Notas:
-
-- Mantengo los nombres de rutas (name=...) que usan las plantillas para facilitar la integración.
-- Próximos pasos recomendados: limpiar plantillas, añadir más tests y configurar linter.
-
-# LoginCRUD — Sistema básico de CRUD de Materia Prima
-
-Proyecto Django que implementa un sistema pequeño para gestionar "Materia Prima" con autenticación y páginas protegidas.
-
-Este README cubre cómo preparar el entorno, ejecutar la app en desarrollo, crear usuarios de prueba, y detalles importantes antes de subir a Git.
-
-## Resumen
-
-- Framework: Django 5.2.x
-- Python: 3.11+
-- Base de datos: SQLite (por defecto, `db.sqlite3` en el repo)
-- App principal: `Texcore`
-
-## Estructura principal
-
-- `LoginCRUD/` — carpeta del proyecto (configuración de Django)
-- `Texcore/` — aplicación que contiene modelos, vistas, templates y estática
-  - `templates/paginas/` — plantillas base, login, dashboard
-  - `templates/libros/` — vistas CRUD para Materia Prima (index, crear, editar)
-  - `static/css/` — estilos (`site.css`, `login.css`)
-- `manage.py` — comandos de Django
-- `db.sqlite3` — base de datos de desarrollo (incluida en repo actualmente)
-
-## Requisitos
-
-- Python 3.11+
-- pip
-
-Recomiendo usar un entorno virtual:
-
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1   # PowerShell
-pip install -r requirements.txt  # (si agregas uno)
-```
-
-> Nota: Este repo no incluye `requirements.txt` por defecto. Puedes generar uno con `pip freeze > requirements.txt` en tu entorno.
-
-## Migraciones
-
-Si abres el proyecto en una máquina nueva, aplica migraciones:
-
-```powershell
-py -3 manage.py makemigrations
-py -3 manage.py migrate
-```
-
-## Crear usuarios
-
-- Crear superusuario (admin):
-
-```powershell
-py -3 manage.py createsuperuser
-```
-
-- Crear usuario de prueba (no superuser):
-
-```powershell
-py -3 manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_user('testuser','test@example.com','Testpass123!')"
-```
-
-En este repositorio de ejemplo ya creé un usuario de prueba:
-
-- Usuario: `testuser`
-- Contraseña: `Testpass123!`
-
-## Ejecutar servidor en desarrollo
-
-```powershell
-py -3 manage.py runserver
-```
-
-Visitar: `http://127.0.0.1:8000/`
-
-## Flujo de la app
-
-1. Inicio (`/`) — página pública con botón "Iniciar Sesion".
-2. Login (`/login/`) — autenticación; redirige al dashboard en `/libros/`.
-3. Dashboard (`/libros/`) — botones a CRUD de Materia Prima.
-4. CRUD (`/materias/`, `/materias/crear/`, `/materias/editar/<id>/`) — vistas protegidas con login.
-
-## Seguridad y buenas prácticas
-
-- Las vistas protegidas usan `@login_required` y `LOGIN_URL`/`LOGIN_REDIRECT_URL` están configurados.
-- La eliminación de registros ahora se hace vía POST con CSRF (se usa un formulario pequeño en la plantilla).
-- No subas `db.sqlite3` ni secretos al repositorio público. Añade `db.sqlite3` a `.gitignore` si vas a publicar el repo.
-- En producción: desactivar `DEBUG`, configurar `ALLOWED_HOSTS`, usar una base de datos adecuada y configurar `SECRET_KEY` vía variables de entorno.
-
-## Tests rápidos (manual)
-
-- Verificar que las URLs protegidas redirigen cuando no estás autenticado:
-
-```powershell
-py -3 manage.py shell -c "from django.test import Client; c=Client(); print(c.get('/libros/').status_code)"
-```
-
-## Posibles mejoras (sugerencias)
-
-- Refactor a Class-Based Views para el CRUD (`ListView`, `CreateView`, `UpdateView`, `DeleteView`).
-- Añadir un `services.py` para separar lógica de negocio y mantener vistas delgadas.
-- Añadir pruebas unitarias (pytest/django) para asegurar flujo de autenticación y CRUD.
-- Añadir `requirements.txt` y un `Makefile` o scripts PowerShell para facilitar comandos comunes.
-
-## Arquitectura: Principios SOLID y Patrones aplicados
-
-He aplicado las siguientes mejoras arquitectónicas para favorecer mantenibilidad y testabilidad:
-
-- **Dependency Inversion Principle (DIP):** las capas de servicio ya no dependen directamente de modelos Django; en `Texcore/services/repositories.py` se definen interfaces (`UserRepository`) y una implementación concreta `DjangoUserRepository`. Los servicios pueden recibir repositorios por inyección.
-- **Interface Segregation Principle (ISP):** las abstracciones son pequeñas y específicas (por ejemplo `UserRepository` con métodos de consulta concretos) evitando interfaces gordas que obliguen a implementar métodos innecesarios.
-
-- **Repository Pattern:** se creó `Texcore/services/repositories.py` para encapsular el acceso a datos y facilitar mocks en tests.
-- **Strategy Pattern:** la autenticación utiliza `Texcore/services/auth_strategies.py` con `AuthStrategy` y `PasswordStrategy` (y un `TokenStrategy` stub) que permiten intercambiar mecanismos de autenticación sin cambiar la lógica del servicio.
-
-Archivos clave:
-
-- `Texcore/services/repositories.py` — interfaces y `DjangoUserRepository`.
-- `Texcore/services/auth_strategies.py` — estrategias de autenticación (`PasswordStrategy`).
-- `Texcore/services/auth_service.py` — `AuthService` que depende de las abstracciones y un wrapper compatible `authenticate_user` para llamadas existentes.
-- `Texcore/views/auth_views.py` — ejemplo de construcción de `AuthService` con `DjangoUserRepository` y `PasswordStrategy`.
-
-Cómo probar localmente:
-
-1. Ejecuta el servidor como antes:
-
-```powershell
-py -3 manage.py runserver
-```
-
-2. El flujo de login no cambia; las vistas siguen funcionando. Para usar DI en tests, instancia `AuthService` con un mock de `UserRepository` o con distintas `AuthStrategy`.
-
-Si quieres, puedo añadir tests de ejemplo que mockeen `UserRepository` y verifiquen la lógica de `AuthService`.
+- **Patrón Repositorio (`repositories.py`):** Encapsula el acceso a la base de datos de Django para facilitar las pruebas y la inversión de dependencias.
+- **Patrón Estrategia (`auth_strategies.py`):** Utilizado para manejar la autenticación. La estrategia de Keycloak extrae la información del usuario del token JWT y sincroniza automáticamente su rol con el modelo `Profile` de Django, permitiendo un Single Sign-On (SSO) transparente.
 
 ## Licencia
 
 MIT License
 
 Copyright (c) 2025 Isaac Trujillo & Brandon Arrellano
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.

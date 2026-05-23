@@ -1,0 +1,54 @@
+{% extends 'paginas/base.html' %}
+
+{% block titulo %} Demo KMS (Encriptación) {% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="bi bi-shield-lock-fill"></i> Integración con KMS (HashiCorp Vault)</h4>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Esta demo simula la preparación de una trama encriptada para ser enviada del <strong>Sistema A</strong> al <strong>Sistema B</strong>.</p>
+                    
+                    <form method="post" class="mb-4">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="message" class="form-label">Mensaje Sensible para Sistema B:</label>
+                            <textarea name="message" id="message" class="form-control" rows="3" placeholder="Ej: Datos de nómina, secretos, etc.">{{ original_message }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-cpu"></i> Encriptar con KMS
+                        </button>
+                    </form>
+
+                    {% if ciphertext %}
+                    <div class="alert alert-info">
+                        <h5><i class="bi bi-info-circle"></i> Resultado de la Encriptación</h5>
+                        <hr>
+                        <p><strong>Trama Encriptada (Ciphertext):</strong></p>
+                        <div class="bg-dark text-light p-3 rounded mb-3 text-break">
+                            <code>{{ ciphertext }}</code>
+                        </div>
+                        <p><strong>Destino (Sistema B):</strong> <code>{{ target_url }}</code></p>
+                        <p class="mb-0"><span class="badge bg-success">Status:</span> {{ status }}</p>
+                    </div>
+
+                    <div class="card border-warning mt-3">
+                        <div class="card-body">
+                            <h6 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Nota de Seguridad</h6>
+                            <p class="small mb-0">La trama anterior ha sido generada por el motor <code>transit</code> de Vault. Solo el Sistema B, con los permisos adecuados en el KMS, podrá revertir este proceso.</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-sm">Volver al Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

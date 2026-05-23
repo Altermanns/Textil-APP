@@ -10,6 +10,30 @@ from ..decorators import (
     any_role_required
 )
 from ..services import dashboard_service
+from ..security import kms_manager
+import requests
+import os
+
+@admin_required
+def send_encrypted_message(request):
+    """Simula el envío de una trama encriptada al Sistema B."""
+    if request.method == 'POST':
+        message = request.POST.get('message', '')
+        # Encriptar trama usando Vault (KMS)
+        ciphertext = kms_manager.encrypt(message)
+        
+        # Simular envío a Sistema B (cuando exista)
+        sistema_b_url = os.environ.get('SISTEMA_B_URL', 'http://sistema_b:8000/api/receive/')
+        
+        context = {
+            'original_message': message,
+            'ciphertext': ciphertext,
+            'target_url': sistema_b_url,
+            'status': 'Trama encriptada generada y lista para envío.'
+        }
+        return render(request, 'paginas/kms_demo.html', context)
+        
+    return render(request, 'paginas/kms_demo.html')
 
 
 @any_role_required

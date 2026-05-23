@@ -1,31 +1,75 @@
 version: '3.8'
 
 services:
-  web:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - DJANGO_SETTINGS_MODULE=LoginCRUD.settings.development
-      - DEBUG=True
-    volumes:
-      - .:/app
-      - static_volume:/app/staticfiles
-    depends_on:
-      - db
-    command: python manage.py runserver 0.0.0.0:8000
-
   db:
     image: postgres:15
     environment:
-      POSTGRES_DB: textilapp_dev
+      POSTGRES_DB: textilapp_db
       POSTGRES_USER: textilapp_user
       POSTGRES_PASSWORD: textilapp_pass
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - textil_network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.0
+    command: start-dev
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://db:5432/textilapp_db
+      KC_DB_USERNAME: textilapp_user
+      KC_DB_PASSWORD: textilapp_pass
+      KC_DB_SCHEMA: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    networks:
+      - textil_network
+
+  vault:
+    image: hashicorp/vault:1.15
+    ports:
+      - "8200:8200"
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: "root"
+      VAULT_ADDR: "http://0.0.0.0:8200"
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - textil_network
+
+  sistema_a:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=LoginCRUD.settings.development
+      - DEBUG=True
+      - SYSTEM_NAME=SISTEMA_A
+      - KEYCLOAK_URL=http://keycloak:8080
+      - KC_REALM=textil-realm
+      - KC_CLIENT_ID=textil-app-a
+      - VAULT_URL=http://vault:8200
+      - VAULT_TOKEN=root
+      - DATABASE_URL=postgres://textilapp_user:textilapp_pass@db:5432/textilapp_db
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+      - keycloak
+      - vault
+    networks:
+      - textil_network
+
+networks:
+  textil_network:
+    driver: bridge
 
 volumes:
   postgres_data:
-  static_volume:

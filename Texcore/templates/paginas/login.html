@@ -9,27 +9,29 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-center align-items-center vh-75">
-  <div class="card shadow-sm p-4" style="max-width:420px; width:100%;">
-    <h3 class="mb-2">Bienvenido de nuevo</h3>
-    <p class="text-muted mb-4">Ingresa con tu cuenta para acceder al panel</p>
-    <form method="post" novalidate>
-      {% csrf_token %}
-      <div class="form-group mb-3">
-        <label for="id_username">Usuario o correo</label>
-        <input id="id_username" class="form-control" name="username" placeholder="usuario o correo">
+<div class="d-flex justify-content-center align-items-center" style="min-height: 70vh;">
+  <div class="card shadow border-0 p-4" style="max-width:450px; width:100%; border-radius: 15px;">
+    <div class="text-center mb-4">
+      <div class="mb-3">
+        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3rem;"></i>
       </div>
-
-      <div class="form-group mb-3">
-        <label for="id_password">Contraseña</label>
-        <input id="id_password" class="form-control" type="password" name="password" placeholder="contraseña">
-      </div>
-
-      <div class="d-flex justify-content-between align-items-center">
-        <button class="btn btn-primary">Entrar</button>
-        <a href="{% url 'inicio' %}" class="text-muted">Volver</a>
-      </div>
-    </form>
+      <h3 class="fw-bold">Acceso Seguro</h3>
+      <p class="text-muted">Inicia sesión a través de Keycloak</p>
+    </div>
+    
+    <div class="mt-2">
+      <a href="{% url 'keycloak_login' %}" class="btn btn-primary btn-lg w-100 py-3 shadow-sm d-flex align-items-center justify-content-center border-0" style="background-color: #0d6efd !important; color: white !important; font-weight: 600; letter-spacing: 0.5px;">
+        <i class="bi bi-box-arrow-in-right me-2" style="font-size: 1.4rem; color: white !important;"></i>
+        <span style="color: white !important;">ENTRAR CON KEYCLOAK</span>
+      </a>
+    </div>
+    
+    <div class="mt-4 text-center">
+      <hr class="text-muted opacity-25">
+      <a href="{% url 'inicio' %}" class="btn btn-link text-decoration-none text-muted">
+        <i class="bi bi-arrow-left me-1"></i> Volver al inicio
+      </a>
+    </div>
   </div>
 </div>
 
