@@ -42,10 +42,12 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'Texcore.middleware.SilentSSOMiddleware',  # Silent SSO
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -122,9 +124,9 @@ STATICFILES_DIRS = [BASE_DIR / "Texcore" / "static"]
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Where to redirect users to log in (used by login_required)
-LOGIN_URL = '/login/'
+LOGIN_URL = 'keycloak_login'
 # After successful login, redirect here by default
-LOGIN_REDIRECT_URL = '/libros/'
+LOGIN_REDIRECT_URL = 'libros/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field

@@ -3,6 +3,7 @@ Authentication views - handles login, logout, and landing page.
 """
 from django.shortcuts import render, redirect
 from django.contrib.auth import login as auth_login, logout as auth_logout
+from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from ..services import auth_service
 from ..services.repositories import DjangoUserRepository
@@ -12,8 +13,9 @@ from ..security import keycloak_manager
 from ..services.auth_service import AuthService
 
 
+@login_required
 def inicio(request):
-    """Landing page: public and minimal."""
+    """Landing page: protected to trigger SSO."""
     return render(request, 'paginas/inicio.html')
 
 
