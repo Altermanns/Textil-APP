@@ -34,7 +34,8 @@ def sync_materia_to_catequesis(materia_id: int) -> tuple[bool, str]:
         ciphertext = kms_manager.encrypt(plaintext)
         
         if not ciphertext:
-            return False, "Fallo al cifrar el payload con AWS KMS."
+            error_details = getattr(kms_manager, 'last_error', 'Error desconocido o variables faltantes')
+            return False, f"Fallo al cifrar el payload con AWS KMS. Detalle: {error_details}"
 
         # 4. Obtener token de Keycloak (Client Credentials)
         # Esto autentica a la app de TextilApp como un servicio confiable
