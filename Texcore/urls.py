@@ -25,6 +25,7 @@ urlpatterns = [
     path('materias/editar/', materia_views.editar_materia_no_id, name='editar_materia_no_id'),
     path('materias/editar/<int:materia_id>/', materia_views.editar_materia, name='editar_materia'),
     path('materias/eliminar/<int:materia_id>/', materia_views.eliminar_materia, name='eliminar_materia'),
+    path('materias/sincronizar/<int:materia_id>/', materia_views.sincronizar_materia, name='sincronizar_materia'),
     
     # Gestión de usuarios (solo admin)
     path('usuarios/', user_views.listar_usuarios, name='listar_usuarios'),

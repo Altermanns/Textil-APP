@@ -81,3 +81,17 @@ def editar_materia_no_id(request):
     Keeps a graceful behavior for users who access the edit URL without an id.
     """
     return redirect('index_materia')
+
+@admin_or_operario_required
+def sincronizar_materia(request, materia_id: int):
+    """Sincroniza una materia prima específica con Catequesis_SS usando cifrado KMS."""
+    from ..services import sync_materia_to_catequesis
+    
+    success, message = sync_materia_to_catequesis(materia_id)
+    if success:
+        messages.success(request, message)
+    else:
+        messages.error(request, message)
+        
+    return redirect('index_materia')
+

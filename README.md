@@ -1,92 +1,91 @@
-# Textil-APP (Texcore)
+# 🧵 Textil-APP (Texcore)
 
-Sistema de gestión para procesos de producción textil, incluyendo el control de materia prima, preparación y procesos de hilatura. 
+![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2.7-092E20.svg?style=for-the-badge&logo=django&logoColor=white)
+![Keycloak](https://img.shields.io/badge/Keycloak-OIDC-F38020.svg?style=for-the-badge&logo=keycloak&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)
 
-El sistema utiliza una arquitectura basada en **Clean Architecture** (Principios SOLID, Patrón Repositorio y Estrategia) y centraliza la autenticación exclusivamente a través de **Keycloak**.
+Sistema integral para el control y gestión de procesos de producción textil. Diseñado bajo **Clean Architecture** (Principios SOLID, patrones Repositorio y Estrategia) para permitir el seguimiento riguroso del inventario de materia prima, fases de preparación y transformación en hilatura.
 
-## Características Principales
+---
 
-- **Gestión de Materia Prima:** Registro y control de inventario inicial.
-- **Preparación y Hilatura:** Seguimiento del ciclo de vida de los materiales y control de calidad.
-- **Autenticación Centralizada:** Login exclusivo a través de **Keycloak (OIDC)**.
-- **Control de Acceso Basado en Roles (RBAC):** Redirecciones y permisos automáticos según el rol asignado en Keycloak (`admin`, `preparador`, `operario`).
+## 📐 Arquitectura del Sistema
 
-## Requisitos Previos
+El proyecto sigue una estructura desacoplada para garantizar escalabilidad y facilidad de pruebas:
 
-- **Python:** 3.11 o superior.
-- **Keycloak:** Una instancia de Keycloak corriendo (puede ser en Docker).
-
-## Configuración del Entorno Local
-
-### 1. Clonar y preparar el entorno
-
-```powershell
-# Clonar el repositorio
-git clone <url-del-repositorio>
-cd Textil-APP
-
-# Crear y activar un entorno virtual
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1   # Windows PowerShell
-# source .venv/bin/activate    # Linux/Mac
-
-# Instalar dependencias
-pip install -r requirements.txt
+```mermaid
+graph TD
+    User([Cliente / Navegador]) -->|Auth Request| KC[Keycloak OIDC]
+    User -->|HTTP Requests| Views[Capa de Vistas / Django Views]
+    Views -->|Inyección de Dependencias| Services[Capa de Servicios / Business Logic]
+    Services -->|Interfaces Repositorio| Repositories[Repositorios / Repositories.py]
+    Repositories -->|Django ORM| DB[(Base de Datos SQL / SQLite / Postgres)]
+    
+    subgraph Core Lógica
+        Services
+        Repositories
+    end
 ```
 
-### 2. Configurar Variables de Entorno
+---
 
-Copia el archivo de ejemplo para crear tu configuración local:
+## ✨ Características Principales
+*   **Gestión de Materia Prima:** Control de inventarios iniciales, lotes y trazabilidad de ingresos.
+*   **Fase de Preparación:** Registro y monitoreo de procesos (limpieza, apertura, mezcla y ajuste de proporciones), incluyendo mermas y rendimientos.
+*   **Fase de Hilatura:** Control secuencial de etapas de transformación (cardado, peinado e hilado).
+*   **Autenticación Centralizada (SSO):** Conexión segura con Keycloak. Implementa **SSO Silencioso** (`SilentSSOMiddleware`) permitiendo la sincronización invisible de la sesión con otras aplicaciones del ecosistema.
+*   **Control de Acceso Basado en Roles (RBAC):** Redirecciones y vistas protegidas para roles: `admin`, `preparador`, `operario`.
 
-```powershell
-cp .env.example .env
-```
+---
 
-Edita el archivo `.env` y asegúrate de configurar los parámetros de Keycloak:
+## 🛠️ Requisitos Previos
+*   Python 3.11 o superior.
+*   Instancia activa de Keycloak (puede desplegarse localmente vía Docker).
 
-```env
-DEBUG=True
-SECRET_KEY=tu_clave_secreta_django
-DJANGO_SETTINGS_MODULE=LoginCRUD.settings.development
+---
 
-# Configuración de Keycloak
-KEYCLOAK_URL=http://localhost:8080
-KC_REALM=textil-realm
-KC_CLIENT_ID=textil-app-a
-KC_CLIENT_SECRET=tu-client-secret-obtenido-de-keycloak
-```
+## ⚙️ Configuración del Entorno Local
 
-### 3. Configuración en Keycloak
+1.  **Clonar el repositorio:**
+    ```bash
+    git clone <url-del-repositorio>
+    cd Textil-APP
+    ```
 
-Para que la aplicación funcione, tu servidor de Keycloak debe tener la siguiente configuración:
+2.  **Entorno virtual y Dependencias:**
+    ```powershell
+    python -m venv .venv
+    .\.venv\Scripts\Activate.ps1   # Windows (PowerShell)
+    # source .venv/bin/activate    # Linux/Mac
+    pip install -r requirements.txt
+    ```
 
-1. **Realm:** `textil-realm` (o el nombre que hayas definido en `.env`).
-2. **Client:** Crear un cliente llamado `textil-app-a`.
-   - **Access Type:** `confidential`.
-   - **Valid Redirect URIs:** `http://localhost:8000/keycloak/callback/`
-   - **Post Logout Redirect URIs:** `http://localhost:8000/`
-3. **Scopes:** En "Client Scopes", asegúrate de que `openid`, `profile` y `email` estén asignados como **Default**.
-4. **Roles:** Crea los roles en el cliente: `admin`, `preparador` y `operario`.
-5. **Usuarios:** Crea usuarios y asígnales los roles correspondientes a través de "Role Mappings".
+3.  **Variables de Entorno (.env):**
+    Crea un archivo `.env` en la raíz del proyecto basándote en `.env.example`:
+    ```env
+    DEBUG=True
+    SECRET_KEY=tu_secreto_django
+    DJANGO_SETTINGS_MODULE=LoginCRUD.settings.development
+    
+    # Keycloak Configuration
+    KEYCLOAK_URL=http://localhost:8080
+    KC_REALM=textil-realm
+    KC_CLIENT_ID=textil-app-a
+    KC_CLIENT_SECRET=tu-client-secret-de-keycloak
+    ```
 
-### 4. Base de Datos y Ejecución
+4.  **Base de Datos y Migraciones:**
+    ```bash
+    python manage.py migrate
+    python manage.py runserver
+    ```
 
-Aplica las migraciones e inicia el servidor de desarrollo:
+---
 
-```powershell
-python manage.py migrate
-python manage.py runserver
-```
-
-Visita `http://localhost:8000/` y utiliza el botón de "Iniciar sesión con Keycloak".
-
-## Arquitectura y Patrones
-
-- **Patrón Repositorio (`repositories.py`):** Encapsula el acceso a la base de datos de Django para facilitar las pruebas y la inversión de dependencias.
-- **Patrón Estrategia (`auth_strategies.py`):** Utilizado para manejar la autenticación. La estrategia de Keycloak extrae la información del usuario del token JWT y sincroniza automáticamente su rol con el modelo `Profile` de Django, permitiendo un Single Sign-On (SSO) transparente.
-
-## Licencia
-
-MIT License
-
-Copyright (c) 2025 Isaac Trujillo & Brandon Arrellano
+## 🔐 Configuración Requerida en Keycloak
+Para que el SSO y el inicio de sesión funcionen correctamente, tu Realm en Keycloak debe contar con:
+1.  **Realm Name:** `textil-realm` (o el configurado en tu `.env`).
+2.  **Client:** `textil-app-a` configurado como **Confidential**.
+    *   **Valid Redirect URIs:** `http://localhost:8000/keycloak/callback/`
+    *   **Post Logout Redirect URIs:** `http://localhost:8000/`
+3.  **Roles de Cliente:** Crear los roles `admin`, `preparador` y `operario` y asignarlos a tus respectivos usuarios.

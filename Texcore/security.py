@@ -1,7 +1,8 @@
 import os
 import json
 import base64
-import hvac
+import boto3
+from botocore.exceptions import ClientError
 from keycloak import KeycloakOpenID
 from django.conf import settings
 
@@ -54,31 +55,49 @@ class KeycloakManager:
 
 class KMSManager:
     def __init__(self):
-        self.vault_url = os.environ.get('VAULT_URL', 'http://localhost:8200')
-        self.vault_token = os.environ.get('VAULT_TOKEN', 'root')
-        self.client = hvac.Client(url=self.vault_url, token=self.vault_token)
+        self.aws_access_key = os.environ.get('AWS_ACCESS_KEY_ID')
+        self.aws_secret_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+        self.region_name = os.environ.get('AWS_REGION_NAME', 'us-east-1')
+        self.key_arn = os.environ.get('AWS_KMS_KEY_ARN')
 
-    def encrypt(self, plaintext, key_name='textil-key'):
-        # Ensure transit engine is enabled and key exists (this would be done in setup)
-        try:
-            encrypt_data_response = self.client.secrets.transit.encrypt_data(
-                name=key_name,
-                plaintext=base64.b64encode(plaintext.encode()).decode()
+        if self.aws_access_key and self.aws_secret_key:
+            self.client = boto3.client(
+                'kms',
+                aws_access_key_id=self.aws_access_key,
+                aws_secret_access_key=self.aws_secret_key,
+                region_name=self.region_name
             )
-            return encrypt_data_response['data']['ciphertext']
+        else:
+            # Fallback local o IAM Role de EC2
+            self.client = boto3.client('kms', region_name=self.region_name)
+
+    def encrypt(self, plaintext, key_name=None):
+        try:
+            response = self.client.encrypt(
+                KeyId=self.key_arn,
+                Plaintext=plaintext.encode('utf-8')
+            )
+            ciphertext_blob = response['CiphertextBlob']
+            return base64.b64encode(ciphertext_blob).decode('utf-8')
+        except ClientError as e:
+            print(f"[AWS KMS ERROR] Error al cifrar: {e.response['Error']['Message']}")
+            return None
         except Exception as e:
-            print(f"Error encrypting: {e}")
+            print(f"[AWS KMS ERROR] Error inesperado al cifrar: {e}")
             return None
 
-    def decrypt(self, ciphertext, key_name='textil-key'):
+    def decrypt(self, ciphertext_base64, key_name=None):
         try:
-            decrypt_data_response = self.client.secrets.transit.decrypt_data(
-                name=key_name,
-                ciphertext=ciphertext
+            ciphertext_blob = base64.b64decode(ciphertext_base64.encode('utf-8'))
+            response = self.client.decrypt(
+                CiphertextBlob=ciphertext_blob
             )
-            return base64.b64decode(decrypt_data_response['data']['plaintext']).decode()
+            return response['Plaintext'].decode('utf-8')
+        except ClientError as e:
+            print(f"[AWS KMS ERROR] Error al descifrar: {e.response['Error']['Message']}")
+            return None
         except Exception as e:
-            print(f"Error decrypting: {e}")
+            print(f"[AWS KMS ERROR] Error inesperado al descifrar: {e}")
             return None
 
 kms_manager = KMSManager()

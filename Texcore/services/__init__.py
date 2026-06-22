@@ -29,6 +29,7 @@ from .hilatura_service import (
     filtrar_hilaturas,
     obtener_estadisticas_hilatura,
 )
+from .kms_sync_service import sync_materia_to_catequesis
 
 __all__ = [
     'authenticate_user',
@@ -51,4 +52,5 @@ __all__ = [
     'agregar_detalle_hilatura',
     'filtrar_hilaturas',
     'obtener_estadisticas_hilatura',
+    'sync_materia_to_catequesis',
 ]

@@ -8,7 +8,7 @@
         <div class="col-md-8 offset-md-2">
             <div class="card shadow">
                 <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0"><i class="bi bi-shield-lock-fill"></i> Integración con KMS (HashiCorp Vault)</h4>
+                    <h4 class="mb-0"><i class="bi bi-shield-lock-fill"></i> Integración con KMS (AWS KMS)</h4>
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Esta demo simula la preparación de una trama encriptada para ser enviada del <strong>Sistema A</strong> al <strong>Sistema B</strong>.</p>
@@ -39,7 +39,7 @@
                     <div class="card border-warning mt-3">
                         <div class="card-body">
                             <h6 class="text-warning"><i class="bi bi-exclamation-triangle"></i> Nota de Seguridad</h6>
-                            <p class="small mb-0">La trama anterior ha sido generada por el motor <code>transit</code> de Vault. Solo el Sistema B, con los permisos adecuados en el KMS, podrá revertir este proceso.</p>
+                            <p class="small mb-0">La trama anterior ha sido generada por el servicio administrado <code>AWS KMS</code>. Solo el Sistema B, con los permisos adecuados en IAM, podrá revertir este proceso y descifrar la información.</p>
                         </div>
                     </div>
                     {% endif %}
