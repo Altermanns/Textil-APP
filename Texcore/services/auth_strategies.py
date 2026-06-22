@@ -81,15 +81,28 @@ class KeycloakStrategy(AuthStrategy):
             realm_roles = user_info.get('realm_access', {}).get('roles', [])
             all_roles = list(set(client_roles + realm_roles))
             
+            # Convertir roles a minúsculas
+            all_roles_lower = [r.lower() for r in all_roles]
+            
+            # LOGS DE SEGURIDAD (Se verán en la consola de Render)
+            print(f"[SECURITY INFO] Intentando sincronizar roles para usuario: {username}")
+            print(f"[SECURITY INFO] Client ID configurado: {client_id}")
+            print(f"[SECURITY INFO] Roles de Cliente encontrados: {client_roles}")
+            print(f"[SECURITY INFO] Roles de Realm encontrados: {realm_roles}")
+            print(f"[SECURITY INFO] Todos los roles combinados: {all_roles}")
+            
             if hasattr(user, 'profile'):
                 profile = user.profile
                 # Mapeo simple: tomamos el primer rol coincidente
-                if 'admin' in all_roles:
+                if 'admin' in all_roles_lower:
                     profile.role = 'admin'
-                elif 'preparador' in all_roles:
+                    print("[SECURITY INFO] Rol asignado en Django: admin")
+                elif 'preparador' in all_roles_lower:
                     profile.role = 'preparador'
-                elif 'operario' in all_roles:
+                    print("[SECURITY INFO] Rol asignado en Django: preparador")
+                elif 'operario' in all_roles_lower:
                     profile.role = 'operario'
+                    print("[SECURITY INFO] Rol asignado en Django: operario")
                 profile.save()
             
             return user
