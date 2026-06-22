@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # 🧵 Textil-APP (Texcore)
+=======
+#  Textil-APP (Texcore)
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue.svg?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-5.2.7-092E20.svg?style=for-the-badge&logo=django&logoColor=white)
@@ -9,7 +13,11 @@ Sistema integral para el control y gestión de procesos de producción textil. D
 
 ---
 
+<<<<<<< HEAD
 ## 📐 Arquitectura del Sistema
+=======
+##  Arquitectura del Sistema
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 
 El proyecto sigue una estructura desacoplada para garantizar escalabilidad y facilidad de pruebas:
 
@@ -29,7 +37,11 @@ graph TD
 
 ---
 
+<<<<<<< HEAD
 ## ✨ Características Principales
+=======
+##  Características Principales
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 *   **Gestión de Materia Prima:** Control de inventarios iniciales, lotes y trazabilidad de ingresos.
 *   **Fase de Preparación:** Registro y monitoreo de procesos (limpieza, apertura, mezcla y ajuste de proporciones), incluyendo mermas y rendimientos.
 *   **Fase de Hilatura:** Control secuencial de etapas de transformación (cardado, peinado e hilado).
@@ -38,13 +50,21 @@ graph TD
 
 ---
 
+<<<<<<< HEAD
 ## 🛠️ Requisitos Previos
+=======
+##  Requisitos Previos
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 *   Python 3.11 o superior.
 *   Instancia activa de Keycloak (puede desplegarse localmente vía Docker).
 
 ---
 
+<<<<<<< HEAD
 ## ⚙️ Configuración del Entorno Local
+=======
+##  Configuración del Entorno Local
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 
 1.  **Clonar el repositorio:**
     ```bash
@@ -82,7 +102,11 @@ graph TD
 
 ---
 
+<<<<<<< HEAD
 ## 🔐 Configuración Requerida en Keycloak
+=======
+##  Configuración Requerida en Keycloak
+>>>>>>> 69bcafcab7f8dc805455b122a78ec85fb8fca666
 Para que el SSO y el inicio de sesión funcionen correctamente, tu Realm en Keycloak debe contar con:
 1.  **Realm Name:** `textil-realm` (o el configurado en tu `.env`).
 2.  **Client:** `textil-app-a` configurado como **Confidential**.
