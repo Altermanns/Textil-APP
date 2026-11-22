@@ -57,7 +57,7 @@ EXPOSE 8000
 
 # Copy and set permissions for entrypoint script
 COPY --chown=appuser:appuser entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Run entrypoint script
 ENTRYPOINT ["/app/entrypoint.sh"]

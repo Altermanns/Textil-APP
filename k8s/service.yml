@@ -1,17 +1,21 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: webapp-service
+  name: textil-app-service
   labels:
-    app: webapp
-    tier: frontend
+    app: textil-app
+    tier: web
 spec:
   type: NodePort
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
   selector:
-    app: webapp
+    app: textil-app
   ports:
     - name: http
       protocol: TCP
-      port: 80
-      targetPort: 80
-      nodePort: 30080
+      port: 8000
+      targetPort: 8000
+      nodePort: 30800

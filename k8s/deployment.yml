@@ -1,15 +1,15 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: webapp-deployment
+  name: textil-app-deployment
   labels:
-    app: webapp
-    tier: frontend
+    app: textil-app
+    tier: web
 spec:
   replicas: 2
   selector:
     matchLabels:
-      app: webapp
+      app: textil-app
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -18,21 +18,26 @@ spec:
   template:
     metadata:
       labels:
-        app: webapp
-        tier: frontend
+        app: textil-app
+        tier: web
     spec:
       containers:
-        - name: webapp
-          image: nginxdemos/hello:latest
+        - name: textil-app
+          image: textil-app:v1
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8000
               protocol: TCP
+          env:
+            - name: DJANGO_SETTINGS_MODULE
+              value: "LoginCRUD.settings.production"
+            - name: DEBUG
+              value: "False"
           resources:
             requests:
-              cpu: "50m"
-              memory: "64Mi"
-            limits:
-              cpu: "150m"
+              cpu: "100m"
               memory: "128Mi"
+            limits:
+              cpu: "300m"
+              memory: "256Mi"
