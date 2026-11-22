@@ -34,6 +34,16 @@ spec:
               value: "LoginCRUD.settings.production"
             - name: DEBUG
               value: "False"
+            - name: KEYCLOAK_URL
+              value: "http://keycloak-service:8080"
+            - name: KEYCLOAK_PUBLIC_URL
+              value: "http://localhost:8081"
+            - name: KC_REALM
+              value: "textil-realm"
+            - name: KC_CLIENT_ID
+              value: "textil-app-a"
+            - name: KC_CLIENT_SECRET
+              value: "textil-app-secret-k8s"
           resources:
             requests:
               cpu: "100m"
@@ -41,3 +51,130 @@ spec:
             limits:
               cpu: "300m"
               memory: "256Mi"
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-realm-config
+  labels:
+    app: keycloak
+data:
+  textil-realm.json: |
+    {
+      "realm": "textil-realm",
+      "enabled": true,
+      "roles": {
+        "realm": [
+          { "name": "admin", "description": "Rol Administrativo" },
+          { "name": "preparador", "description": "Rol Preparador" },
+          { "name": "operario", "description": "Rol Operario" }
+        ]
+      },
+      "clients": [
+        {
+          "clientId": "textil-app-a",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "secret": "textil-app-secret-k8s",
+          "redirectUris": ["*"],
+          "webOrigins": ["*"],
+          "publicClient": false,
+          "protocol": "openid-connect",
+          "standardFlowEnabled": true,
+          "directAccessGrantsEnabled": true,
+          "serviceAccountsEnabled": true
+        }
+      ],
+      "users": [
+        {
+          "username": "admin",
+          "enabled": true,
+          "emailVerified": true,
+          "firstName": "Administrador",
+          "lastName": "Sistema",
+          "email": "admin@textilapp.com",
+          "credentials": [
+            { "type": "password", "value": "admin123", "temporary": false }
+          ],
+          "realmRoles": ["admin"]
+        },
+        {
+          "username": "preparador",
+          "enabled": true,
+          "emailVerified": true,
+          "firstName": "Demo",
+          "lastName": "Preparador",
+          "email": "preparador@textilapp.com",
+          "credentials": [
+            { "type": "password", "value": "preparador123", "temporary": false }
+          ],
+          "realmRoles": ["preparador"]
+        },
+        {
+          "username": "operario",
+          "enabled": true,
+          "emailVerified": true,
+          "firstName": "Demo",
+          "lastName": "Operario",
+          "email": "operario@textilapp.com",
+          "credentials": [
+            { "type": "password", "value": "operario123", "temporary": false }
+          ],
+          "realmRoles": ["operario"]
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: keycloak-deployment
+  labels:
+    app: keycloak
+    tier: auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+        tier: auth
+    spec:
+      containers:
+        - name: keycloak
+          image: quay.io/keycloak/keycloak:24.0
+          args:
+            - "start-dev"
+            - "--import-realm"
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          env:
+            - name: KEYCLOAK_ADMIN
+              value: "admin"
+            - name: KEYCLOAK_ADMIN_PASSWORD
+              value: "admin123"
+            - name: KC_HTTP_ENABLED
+              value: "true"
+            - name: KC_HOSTNAME_STRICT
+              value: "false"
+            - name: KC_HOSTNAME_STRICT_HTTPS
+              value: "false"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
+            limits:
+              cpu: "800m"
+              memory: "1024Mi"
+          volumeMounts:
+            - name: realm-volume
+              mountPath: /opt/keycloak/data/import
+      volumes:
+        - name: realm-volume
+          configMap:
+            name: keycloak-realm-config

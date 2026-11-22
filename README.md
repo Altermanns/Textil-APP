@@ -5,6 +5,8 @@
 ![Keycloak](https://img.shields.io/badge/Keycloak-OIDC-F38020.svg?style=for-the-badge&logo=keycloak&logoColor=white)
 ![AWS KMS](https://img.shields.io/badge/AWS-KMS-232F3E.svg?style=for-the-badge&logo=amazonaws&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Container-2496ED.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-K8s-326CE5.svg?style=for-the-badge&logo=kubernetes&logoColor=white)
+![Argo CD](https://img.shields.io/badge/Argo_CD-GitOps-EF7B4D.svg?style=for-the-badge&logo=argo&logoColor=white)
 
 Sistema integral para el control, trazabilidad y gestión de procesos de producción textil. Diseñado bajo principios **SOLID** y **Clean Architecture** (Capa de Servicios, Patrón Estrategia y Patrón Repositorio) para permitir el seguimiento riguroso del inventario de materia prima, fases de preparación, transformación en hilatura y sincronización segura entre sistemas.
 
@@ -129,7 +131,11 @@ Textil-APP/
 │   ├── models.py               # Modelos de datos (Profile, Materia, Preparacion, Hilatura)
 │   ├── security.py             # Clientes KeycloakManager y KMSManager (AWS KMS)
 │   └── urls.py                 # Rutas de la aplicación Texcore
-├── docs/                       # Documentación adicional, backlog y reportes de seguridad
+├── k8s/                        # Manifiestos Kubernetes & GitOps (Argo CD)
+│   ├── deployment.yml          # Deployment de Textil-APP (2 réplicas) + Keycloak Pod + ConfigMap
+│   ├── service.yml             # Services NodePort para Textil-APP (:30800) y Keycloak (:30081)
+│   └── hpa.yml                 # Horizontal Pod Autoscaler (Mín: 2, Máx: 5 réplicas al 50% CPU)
+├── docs/                       # Documentación adicional, informes GitOps y reportes de seguridad
 ├── Dockerfile                  # Imagen Docker para despliegue
 ├── docker-compose.yml          # Orquestación local (PostgreSQL + Keycloak + Vault + App)
 ├── entrypoint.sh               # Script de arranque para contenedor en producción
@@ -264,3 +270,97 @@ Para que el inicio de sesión OIDC, el **Silent SSO** y la sincronización de ro
 El proyecto incluye soporte listo para producción mediante `Dockerfile`, `entrypoint.sh`, `Gunicorn` y `WhiteNoise`:
 - Revisa la guía detallada en [`DEPLOYMENT.md`](./DEPLOYMENT.md) para instrucciones paso a paso de despliegue en **Render**.
 - Revisa [`DEMO_GUIDE.md`](./DEMO_GUIDE.md) para consultar el guion de presentación y demostración funcional del sistema.
+
+---
+
+## ☸️ Despliegue GitOps con Kubernetes, Argo CD y HPA (`k8s/`)
+
+El proyecto cuenta con una arquitectura **GitOps** completa en la carpeta [`k8s/`](./k8s/) para el despliegue automatizado y continuo en **Kubernetes** utilizando **Argo CD**, tomando este repositorio Git como única fuente de verdad (*Single Source of Truth*).
+
+```mermaid
+graph LR
+    Dev["Desarrollador"] -->|"git push (k8s/*.yml)"| Git["Repositorio GitHub: Textil-APP"]
+    Argo["Argo CD (Automated Sync)"] -->|"Monitorea k8s/"| Git
+    Argo -->|"Sincroniza"| Deploy["Deployment: textil-app-deployment (2 Pods)"]
+    Argo -->|"Sincroniza"| KC["Deployment: keycloak-deployment (1 Pod)"]
+    Argo -->|"Sincroniza"| Svc["Services NodePort: textil-app & keycloak"]
+    Argo -->|"Sincroniza"| HPA["HPA: textil-app-hpa (Min: 2, Max: 5, CPU: 50%)"]
+    Metrics["Metrics Server"] -->|"Lee consumo CPU"| HPA
+    HPA -->|"Escala 2 -> 5 Pods"| Deploy
+    Deploy <-->|"OIDC SSO"| KC
+```
+
+### 📄 Resumen de Manifiestos en `k8s/`
+
+| Archivo | Recurso Kubernetes | Configuración Principal |
+| :--- | :--- | :--- |
+| [`k8s/deployment.yml`](./k8s/deployment.yml) | `Deployment` + `ConfigMap` | • **`textil-app-deployment`:** 2 réplicas iniciales (`replicas: 2`), selectores `app: textil-app`, puerto `8000` y recursos (`requests: 100m CPU / 128Mi RAM`, `limits: 300m CPU / 256Mi RAM`).<br>• **`keycloak-deployment` + `keycloak-realm-config`:** Despliega un Pod de Keycloak 24.0 e importa automáticamente el realm `textil-realm`, el cliente `textil-app-a` y los usuarios por rol (`admin`, `preparador`, `operario`). |
+| [`k8s/service.yml`](./k8s/service.yml) | `Service (NodePort)` | • **`textil-app-service`:** Tipo `NodePort` (`8000:30800/TCP`) con `sessionAffinity: ClientIP` asociada a `app: textil-app`.<br>• **`keycloak-service`:** Tipo `NodePort` (`8080:30081/TCP`) asociada a `app: keycloak`. |
+| [`k8s/hpa.yml`](./k8s/hpa.yml) | `HorizontalPodAutoscaler` | • **`textil-app-hpa` (`autoscaling/v2`):** Escala automáticamente `textil-app-deployment` entre un **mínimo de 2 réplicas** y un **máximo de 5 réplicas** con un objetivo de utilización de **CPU del 50%**. |
+
+---
+
+### 🛠️ Instrucciones Paso a Paso para Desplegar con Argo CD
+
+#### 1. Iniciar Minikube, habilitar `metrics-server` y cargar la imagen de `Textil-APP`
+```powershell
+minikube start --driver=docker
+minikube addons enable metrics-server
+
+docker build -t textil-app:v1 .
+minikube image load textil-app:v1
+```
+
+#### 2. Instalar Argo CD en el clúster y obtener credenciales
+```powershell
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+kubectl wait --for=condition=Ready pods --all -n argocd --timeout=300s
+
+# Obtener la contraseña inicial del usuario 'admin'
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) }
+
+# Exponer la interfaz web de Argo CD en https://localhost:8080
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+```
+
+#### 3. Configurar la Aplicación en Argo CD (Automated Sync)
+1. Ingresa a **`https://localhost:8080`** con usuario `admin` y la contraseña obtenida.
+2. Haz clic en **+ NEW APP** y configura:
+   - **Application Name:** `webapp-gitops`
+   - **Project Name:** `default`
+   - **Sync Policy:** `Automatic` (marcando ✅ **PRUNE RESOURCES** y ✅ **SELF HEAL**)
+   - **Repository URL:** URL pública de este repositorio GitHub (`Textil-APP`)
+   - **Revision:** `HEAD`
+   - **Path:** `k8s`
+   - **Cluster URL:** `https://kubernetes.default.svc`
+   - **Namespace:** `default`
+3. Haz clic en **CREATE**. Argo CD sincronizará automáticamente los deployments, services y el HPA.
+
+#### 4. Exponer y Acceder a `Textil-APP` y `Keycloak`
+Abre dos terminales para exponer ambos servicios hacia el navegador local:
+
+```powershell
+# Terminal 1: Exponer el Pod de Keycloak en http://localhost:8081
+kubectl port-forward svc/keycloak-service 8081:8080
+
+# Terminal 2: Exponer Textil-APP en http://localhost:8000
+kubectl port-forward svc/textil-app-service 8000:8000
+```
+
+Abre **`http://localhost:8000`** en tu navegador. Serás redirigido al login del Pod de Keycloak donde puedes ingresar con los usuarios preconfigurados:
+- **Administrativo:** `admin` / `admin123`
+- **Preparador:** `preparador` / `preparador123`
+- **Operario:** `operario` / `operario123`
+
+#### 5. Probar el Escalamiento Automático (HPA: 2 → 5 Réplicas)
+```powershell
+# Generar carga continua de CPU sobre Textil-APP
+kubectl run -i --tty load-generator --rm --image=busybox:1.28 --restart=Never -- /bin/sh -c "while true; do wget -q -O- http://textil-app-service:8000/login/ > /dev/null; done"
+
+# Monitorear en otra terminal el escalamiento del HPA de 2 a 5 réplicas al superar el 50% de CPU
+kubectl get hpa textil-app-hpa --watch
+kubectl get pods -l app=textil-app
+```
+
+> 📄 Para consultar el informe técnico completo con la guía de evidencias y capturas de pantalla, revisa [`docs/INFORME_ARGOCD_GITOPS.md`](./docs/INFORME_ARGOCD_GITOPS.md).

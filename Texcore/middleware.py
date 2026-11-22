@@ -16,14 +16,15 @@ class SilentSSOMiddleware:
         try:
             exempt_paths = [
                 reverse('login'),
-                reverse('callback'),
+                reverse('keycloak_login'),
+                reverse('keycloak_callback'),
                 reverse('logout'),
                 '/admin/',
                 '/static/',
             ]
         except:
             # Fallback si las URLs no están listas
-            exempt_paths = ['/login/', '/callback/', '/logout/', '/admin/', '/static/']
+            exempt_paths = ['/login/', '/keycloak/login/', '/keycloak/callback/', '/logout/', '/admin/', '/static/']
         
         if any(path.startswith(p) for p in exempt_paths):
             return self.get_response(request)
@@ -33,7 +34,7 @@ class SilentSSOMiddleware:
             request.session['sso_checked'] = True
             
             # Construir la URL de login
-            redirect_uri = request.build_absolute_uri(reverse('callback'))
+            redirect_uri = request.build_absolute_uri(reverse('keycloak_callback'))
             
             # Forzar HTTPS en producción (onrender.com)
             if '.onrender.com' in request.get_host():

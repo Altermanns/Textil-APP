@@ -10,6 +10,7 @@ class KeycloakManager:
     def __init__(self):
         # Asegurar que tomamos el valor del entorno y que no esté vacío
         self.server_url = os.environ.get('KEYCLOAK_URL') or 'http://localhost:8080'
+        self.public_url = os.environ.get('KEYCLOAK_PUBLIC_URL') or self.server_url
         
         # Validación extra: si no tiene http:// o https://, algo anda mal en la config
         if self.server_url and not self.server_url.startswith(('http://', 'https://')):
@@ -33,10 +34,15 @@ class KeycloakManager:
             raise
 
     def get_login_url(self, redirect_uri):
-        return self.keycloak_openid.auth_url(
-            redirect_uri=redirect_uri,
-            scope="openid profile email"
-        )
+        from urllib.parse import urlencode
+        clean_url = self.public_url.rstrip('/')
+        params = urlencode({
+            'client_id': self.client_id,
+            'response_type': 'code',
+            'scope': 'openid profile email',
+            'redirect_uri': redirect_uri,
+        })
+        return f"{clean_url}/realms/{self.realm_name}/protocol/openid-connect/auth?{params}"
 
     def get_token(self, code, redirect_uri):
         return self.keycloak_openid.token(
@@ -51,7 +57,7 @@ class KeycloakManager:
     def get_logout_url(self, redirect_uri):
         # La forma más robusta es construir la URL de logout de Keycloak
         # para que el navegador del usuario la visite.
-        clean_url = self.server_url.rstrip('/')
+        clean_url = self.public_url.rstrip('/')
         return f"{clean_url}/realms/{self.realm_name}/protocol/openid-connect/logout?post_logout_redirect_uri={redirect_uri}&client_id={self.client_id}"
 
 

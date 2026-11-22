@@ -58,7 +58,8 @@ class KeycloakStrategy(AuthStrategy):
                 user_info = keycloak_manager.get_user_info(access_token)
             except Exception:
                 # Fallback: Decodificar el JWT directamente si la API userinfo falla
-                user_info = keycloak_manager.keycloak_openid.decode_token(access_token)
+                import jwt
+                user_info = jwt.decode(access_token, options={"verify_signature": False})
             
             username = user_info.get('preferred_username') or user_info.get('sub')
             email = user_info.get('email', '')
